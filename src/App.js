@@ -1,4 +1,4 @@
-import './App.css'
+import { useEffect, useState } from 'react'
 
 import firebase from 'firebase/compat/app'
 import 'firebase/compat/firestore'
@@ -54,60 +54,41 @@ function SignOut() {
   )
 }
 
-async function ChatRoom() {
-  // const converter = {
-  //   toFirestore(message) {
-  //     return {
-  //       text: message.text,
-  //     }
-  //   },
-  //   fromFirestore(snapshot, options) {
-  //     const data = snapshot.data(options)
+function ChatRoom() {
+  const [messages, setMessages] = useState([])
+  const messagesRef = firestore.collection('messages')
 
-  //     return {
-  //       id: snapshot.id,
-  //       text: data.text,
-  //     }
-  //   },
-  // }
+  useEffect(() => {
+    const unsubscribe = messagesRef.onSnapshot((querySnapshot) => {
+      const messagesArray = []
+      querySnapshot.forEach((doc) => {
+        messagesArray.push({ ...doc.data(), id: doc.id })
+      })
 
-  // const messagesRef = firestore.collection('messages').withConverter(converter)
-  // const messagesRef = firestore.collection('messages')
-  // const query = messagesRef.orderBy('createdAt').limitToLast(25)
+      setMessages(messagesArray)
+    })
 
-  // // Getting messages in realtime
-  // const [messages, loading, error] = useCollectionData(query, {
-  //   idField: 'id',
-  // })
-  // const ref = firestore.collection('messages').withConverter(converter)
-  // const [messages, loading, error] = useCollectionData(ref)
-  // console.log({ messages })
-
-  const querySnapshot = await getDocs(collection(firestore, 'messages'))
-  console.log(querySnapshot)
-  // querySnapshot.forEach((doc) => {
-  //   // doc.data() is never undefined for query doc snapshots
-  //   console.log(doc.id, ' => ', doc.data())
-  // })
+    return () => {
+      unsubscribe()
+    }
+  }, [messagesRef])
+  console.log('messages', messages)
 
   return (
     <>
-      coucou
-      {/* {loading && <p>Loading...</p>}
-      {error && <p>Oops, Houston we have a problem 🙀</p>}
       <ul>
         {messages &&
           messages.map((message) => {
             return <ChatMessage key={message.id} message={message} />
           })}
-      </ul> */}
+      </ul>
     </>
   )
 }
 
 function ChatMessage({ message }) {
   const { text, photoUrl, uid } = message
-
+  console.log('uid', uid)
   const messageClass = uid === auth.currentUser.uid ? 'sent' : 'received'
 
   return (
