@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import firebase from 'firebase/compat/app'
 import 'firebase/compat/firestore'
@@ -54,6 +54,9 @@ function SignOut() {
 
 function ChatRoom() {
   const [messages, setMessages] = useState([])
+  const [formValue, setFormValue] = useState('')
+  const theEnd = useRef()
+
   /**
    * ⚠️ We need to memoize `messagesRef` to avoid creating a new object
    * at each component re-render since it's used as a useEffect dependency
@@ -81,7 +84,26 @@ function ChatRoom() {
      * To avoid this we're using useMemo to memoize `messagesRef`.
      */
   }, [messagesRef])
-  console.log('messages', messages)
+
+  const sendMessage = async (e) => {
+    e.preventDefault()
+
+    const { uid, photoUrl } = auth.currentUser
+
+    // Creating a new document in firestore
+    await messagesRef.add({
+      text: formValue,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      uid,
+      photoUrl,
+    })
+
+    // Reseting our form value
+    setFormValue('')
+
+    // Scrolling to the last message when a new message comes in
+    theEnd.current.scrollIntoView({ behavior: 'smooth' })
+  }
 
   return (
     <>
@@ -91,6 +113,17 @@ function ChatRoom() {
             return <ChatMessage key={message.id} message={message} />
           })}
       </ul>
+
+      <div ref={theEnd}></div>
+
+      <form onSubmit={sendMessage}>
+        <input
+          type="text"
+          value={formValue}
+          onChange={(e) => setFormValue(e.target.value)}
+        />
+        <button type="submit">🕊️</button>
+      </form>
     </>
   )
 }
