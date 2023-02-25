@@ -1,20 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import firebase from 'firebase/compat/app'
 import 'firebase/compat/firestore'
 import 'firebase/compat/auth'
 
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { collection, getDocs } from 'firebase/firestore'
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyBlru3P7s47TlBOoMYys-EHPK1CIlRDEpg',
-  authDomain: 'realtime-chat-room-with-react.firebaseapp.com',
-  projectId: 'realtime-chat-room-with-react',
-  storageBucket: 'realtime-chat-room-with-react.appspot.com',
-  messagingSenderId: '789919013928',
-  appId: '1:789919013928:web:bfdf26349a90b5981ee91d',
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 })
 
 const auth = firebase.auth()
@@ -56,7 +54,12 @@ function SignOut() {
 
 function ChatRoom() {
   const [messages, setMessages] = useState([])
-  const messagesRef = firestore.collection('messages')
+  /**
+   * ⚠️ We need to memoize `messagesRef` to avoid creating a new object
+   * at each component re-render since it's used as a useEffect dependency
+   * which would end up in an infinite re-render loop.
+   */
+  const messagesRef = useMemo(() => firestore.collection('messages'), [])
 
   useEffect(() => {
     const unsubscribe = messagesRef.onSnapshot((querySnapshot) => {
@@ -71,6 +74,12 @@ function ChatRoom() {
     return () => {
       unsubscribe()
     }
+    /**
+     * ⚠️ Adding `messagesRef` as a useEffect() dependency
+     * would cause an infinite re-render loop if `messagesRef`
+     * was reintiated every time the component re-rendered.
+     * To avoid this we're using useMemo to memoize `messagesRef`.
+     */
   }, [messagesRef])
   console.log('messages', messages)
 
