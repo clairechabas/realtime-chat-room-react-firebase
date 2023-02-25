@@ -1,5 +1,7 @@
 # 🐱🔥 Realtime Chat Room React & Firebase
 
+Playing around with some Firebase features like auth, firestore and functions.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Project setup
